@@ -90,7 +90,9 @@ class Php < Formula
     args = [
       "--prefix=#{prefix}",
       "--disable-debug",
-      "--with-config-file-path=#{etc}",
+      "--localstatedir=#{var}",
+      "--sysconfdir=#{etc}/php5",
+      "--with-config-file-path=#{etc}/php5",
       "--with-config-file-scan-dir=#{etc}/php5/conf.d",
       "--with-iconv-dir=/usr",
       "--enable-dba",
@@ -216,12 +218,28 @@ class Php < Formula
     ENV.deparallelize # parallel install fails on some systems
     system "make install"
 
-    etc.install "./php.ini-production" => "php.ini" unless File.exists? etc+"php.ini"
+    etc_php = (etc + "php5")
+    if not etc_php.exist?
+      etc_php.mkdir
+    end
+
+    php_ini = "php.ini"
+    if File.exists?(etc_php + php_ini)
+      php_ini = "php.ini.#{version}"
+    end
+    etc_php.install "./php.ini-production" => php_ini
+
     chmod_R 0775, lib+"php"
     system bin+"pear", "config-set", "php_ini", etc+"php.ini"
-    if ARGV.include?('--with-fpm') and not File.exists? etc+"php-fpm.conf"
-      etc.install "sapi/fpm/php-fpm.conf"
-      inreplace etc+"php-fpm.conf" do |s|
+
+    if ARGV.include? '--with-fpm'
+      fpm_conf = "php-fpm.conf"
+      if File.exists?(etc_php + fpm_conf)
+        fpm_conf = "php-fpm.conf.#{version}"
+      end
+
+      etc_php.install "sapi/fpm/php-fpm.conf" => fpm_conf
+      inreplace etc_php+fpm_conf do |s|
         s.sub!(/^;?daemonize\s*=.+$/,'daemonize = no')
         s.sub!(/^;?pm\.start_servers\s*=.+$/,'pm.start_servers = 20')
         s.sub!(/^;?pm\.min_spare_servers\s*=.+$/,'pm.min_spare_servers = 5')
@@ -239,7 +257,7 @@ To enable PHP in Apache add the following to httpd.conf and restart Apache:
     LoadModule php5_module    #{libexec}/apache2/libphp5.so
 
 The php.ini file can be found in:
-    #{etc}/php.ini
+    #{etc}/php5/php.ini
 
 Development and head builds will use libedit in place of readline.
 
@@ -277,7 +295,7 @@ You may also need to edit the plist to use the correct "UserName".
       <array>
         <string>#{sbin}/php-fpm</string>
         <string>--fpm-config</string>
-        <string>#{etc}/php-fpm.conf</string>
+        <string>#{etc}/php5/php-fpm.conf</string>
       </array>
       <key>RunAtLoad</key>
       <true/>
