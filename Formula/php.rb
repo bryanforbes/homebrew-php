@@ -230,7 +230,7 @@ class Php < Formula
     etc_php.install "./php.ini-production" => php_ini
 
     chmod_R 0775, lib+"php"
-    system bin+"pear", "config-set", "php_ini", etc+"php.ini"
+    system bin+"pear", "config-set", "php_ini", etc_php+"php.ini"
 
     if ARGV.include? '--with-fpm'
       fpm_conf = "php-fpm.conf"
@@ -278,7 +278,7 @@ You may also need to edit the plist to use the correct "UserName".
 
   def test
     if ARGV.include?('--with-fpm')
-      system "#{sbin}/php-fpm -y #{etc}/php-fpm.conf -t"
+      system "#{sbin}/php-fpm -y #{etc}/php5/php-fpm.conf -t"
     end
   end
 
