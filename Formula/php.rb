@@ -241,7 +241,9 @@ class Php < Formula
       etc_php.install "sapi/fpm/php-fpm.conf" => fpm_conf
       inreplace etc_php+fpm_conf do |s|
         s.sub!(/^;?daemonize\s*=.+$/,'daemonize = no')
+        s.sub!(/^;include\s*=.+$/,";include=#{etc_php}/fpm.d/*.conf")
         s.sub!(/^;?pm\.start_servers\s*=.+$/,'pm.start_servers = 20')
+        s.sub!(/^pm\.max_children\s*=.+$/,'pm.max_children = 35')
         s.sub!(/^;?pm\.min_spare_servers\s*=.+$/,'pm.min_spare_servers = 5')
         s.sub!(/^;?pm\.max_spare_servers\s*=.+$/,'pm.max_spare_servers = 35')
       end
